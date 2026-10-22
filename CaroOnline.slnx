@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Code/" />
+  <Folder Name="/Code/Client/">
+    <Project Path="Code/Client/CaroClient.csproj" />
+  </Folder>
+  <Folder Name="/Code/Server/">
+    <Project Path="Code/Server/CaroServer.csproj" />
+  </Folder>
+  <Folder Name="/Code/Shared/">
+    <Project Path="Code/Shared/CaroShared.csproj" />
+  </Folder>
+</Solution>

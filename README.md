@@ -1,7 +1,7 @@
 # UDM_16 -- Game Caro trực tuyến
 
 Game Caro nhiều người chơi qua Server, hỗ trợ phòng đấu, khán giả và đồng bộ trạng thái trận đấu.
-Ứng dụng desktop C++17 / Qt 6, mô hình Client–Server qua TCP (NDJSON), lưu lịch sử bằng SQLite.
+Ứng dụng desktop C# (.NET 10, WinForms), mô hình Client–Server qua TCP (NDJSON), lưu lịch sử bằng SQLite.
 
 # Danh Sách Thành Viên
 1. Nguyễn Đức Huy
@@ -18,8 +18,8 @@ Phân công chi tiết: [PHAN_CONG.md](PHAN_CONG.md). Giao thức: [Code/Shared/
 ```text
 Code/
   Server/   # CaroServer: TCP, phòng, luật chơi, khán giả, reconnect, SQLite
-  Client/   # CaroClient: giao diện Qt Widgets
-  Shared/   # Protocol.h + PROTOCOL.md dùng chung
+  Client/   # CaroClient: giao diện WinForms
+  Shared/   # Protocol.cs + PROTOCOL.md dùng chung
 DOCX/       # Báo cáo
 Extra/      # Script kiểm thử, kết quả, bằng chứng
 PPTX/       # Slide thuyết trình
@@ -27,16 +27,23 @@ PPTX/       # Slide thuyết trình
 
 ## Môi trường
 
-- Windows 10/11, Visual Studio 2022 (Desktop development with C++)
-- Qt 6 (MSVC 2022 64-bit), các module Core, Network, Widgets, Sql
-- CMake ≥ 3.21, Python 3 (chạy script kiểm thử)
+- Windows 10/11, [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Visual Studio 2026 (workload *.NET desktop development*) hoặc VS Code + C# Dev Kit
+- SQLite qua NuGet `Microsoft.Data.Sqlite` (tự tải khi build)
+- Python 3 (chạy script kiểm thử)
 
 ## Build & chạy
 
-1. Visual Studio: **File > Open > Folder**, chọn thư mục repo.
-2. Thêm tham số CMake trỏ tới Qt, ví dụ `-DCMAKE_PREFIX_PATH=C:/Qt/6.x.x/msvc2022_64`.
-3. **Build All**, rồi chạy `CaroServer.exe` (mặc định `0.0.0.0:45454`; đổi bằng `--address`, `--port`).
-4. Mở từ 2 `CaroClient.exe` trở lên, nhập IP/Port của Server và tên khác nhau.
+Visual Studio: mở `CaroOnline.slnx`, **Build Solution**. Hoặc dòng lệnh:
+
+```bash
+dotnet build CaroOnline.slnx
+dotnet run --project Code/Server -- --port 45454
+dotnet run --project Code/Client
+```
+
+1. Chạy Server trước (mặc định `0.0.0.0:45454`; đổi bằng `--address`, `--port`).
+2. Mở từ 2 Client trở lên, nhập IP/Port của Server và tên khác nhau.
 
 ## Video demo
 

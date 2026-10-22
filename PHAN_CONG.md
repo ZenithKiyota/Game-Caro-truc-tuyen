@@ -6,14 +6,14 @@
 
 | #   | Thành viên            | Vai trò / tính năng                                                                        | File sở hữu (Server)                                                      | File sở hữu (Client)                                              | Tài liệu, kiểm thử                                                                                                      |
 | --- | --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Nguyễn Đức Huy**    | Trưởng nhóm. Lõi Server: TCP, framing NDJSON, điều phối message, log, clock                | `Code/Server/CaroServer.cpp`, `main.cpp`, `CMakeLists.txt` (gốc + Server) | –                                                                 | Review/merge PR, stress & performance test (`Extra/tests/performance_*.py`), mục **Kiến trúc + Protocol** trong báo cáo |
-| 2   | **Trần Đức Toàn**     | Lõi Client: khung giao diện, kết nối IP/Port, trạng thái kết nối, auto-reconnect, nhật ký  | –                                                                         | `Code/Client/MainWindow.cpp`, `main.cpp`, `Client/CMakeLists.txt` | Mục **Thiết kế GUI**, **ghép file DOCX** báo cáo                                                                        |
-| 3   | **Hứa Hồng Tiến**     | Luật chơi: kiểm tra nước đi, thắng/thua/hòa, giới hạn 30 giây/lượt                         | `Code/Server/GameHandler.cpp`                                             | `GamePanel.cpp`, `BoardWidget.cpp/.h`                             | Mục **Luật chơi**, ghép **file test case** (theo mẫu sheet)                                                             |
-| 4   | **Hồ Thanh Anh Minh** | Sảnh: danh sách online, gửi/chấp nhận/từ chối lời mời, tạo nhiều phòng đồng thời           | `Code/Server/LobbyHandler.cpp`                                            | `LobbyPanel.cpp`                                                  | Mục **Hướng dẫn chạy**, **README.md**, quay **video demo**                                                              |
-| 5   | **Nguyễn Tuấn Tú**    | Khán giả: danh sách phòng, vào xem giữa trận (nhận snapshot đầy đủ), phân quyền, rời phòng | `Code/Server/SpectatorHandler.cpp`                                        | `RoomsPanel.cpp`                                                  | Mục **Khán giả & đồng bộ trạng thái**, làm **PPTX**                                                                     |
-| 6   | **Nguyễn An Phát**    | Phiên & lịch sử: đăng nhập, token, ngắt kết nối, reconnect 90 giây, SQLite                 | `Code/Server/SessionHandler.cpp`, `HistoryStore.cpp`                      | `HistoryPanel.cpp`                                                | Mục **Lưu trữ & reconnect**, **Hạn chế** của sản phẩm                                                                   |
+| 1   | **Nguyễn Đức Huy**    | Trưởng nhóm. Lõi Server: TCP, framing NDJSON, điều phối message, log, clock                | `Code/Server/CaroServer.cs`, `Program.cs`, `CaroServer.csproj`, `CaroOnline.slnx` | –                                                                 | Review/merge PR, stress & performance test (`Extra/tests/performance_*.py`), mục **Kiến trúc + Protocol** trong báo cáo |
+| 2   | **Trần Đức Toàn**     | Lõi Client: khung giao diện, kết nối IP/Port, trạng thái kết nối, auto-reconnect, nhật ký  | –                                                                         | `Code/Client/MainForm.cs`, `Program.cs`, `CaroClient.csproj` | Mục **Thiết kế GUI**, **ghép file DOCX** báo cáo                                                                        |
+| 3   | **Hứa Hồng Tiến**     | Luật chơi: kiểm tra nước đi, thắng/thua/hòa, giới hạn 30 giây/lượt                         | `Code/Server/GameHandler.cs`                                             | `GamePanel.cs`, `BoardControl.cs`                             | Mục **Luật chơi**, ghép **file test case** (theo mẫu sheet)                                                             |
+| 4   | **Hồ Thanh Anh Minh** | Sảnh: danh sách online, gửi/chấp nhận/từ chối lời mời, tạo nhiều phòng đồng thời           | `Code/Server/LobbyHandler.cs`                                            | `LobbyPanel.cs`                                                  | Mục **Hướng dẫn chạy**, **README.md**, quay **video demo**                                                              |
+| 5   | **Nguyễn Tuấn Tú**    | Khán giả: danh sách phòng, vào xem giữa trận (nhận snapshot đầy đủ), phân quyền, rời phòng | `Code/Server/SpectatorHandler.cs`                                        | `RoomsPanel.cs`                                                  | Mục **Khán giả & đồng bộ trạng thái**, làm **PPTX**                                                                     |
+| 6   | **Nguyễn An Phát**    | Phiên & lịch sử: đăng nhập, token, ngắt kết nối, reconnect 90 giây, SQLite                 | `Code/Server/SessionHandler.cs`, `HistoryStore.cs`                      | `HistoryPanel.cs`                                                | Mục **Lưu trữ & reconnect**, **Hạn chế** của sản phẩm                                                                   |
 
-**File dùng chung** (`CaroServer.h`, `MainWindow.h`, `Code/Shared/*`): chỉ thêm khai báo trong khối của mình. Đổi protocol phải mở PR riêng và báo cả nhóm trước.
+Server là `partial class CaroServer`, Client là `partial class MainForm`: mỗi người khai báo field/hàm của mình **ngay trong file của mình**. Trạng thái dùng chung (`Session`, `Room`, `Invite`, lock `_gate`) nằm ở `CaroServer.cs`; `Code/Shared/Protocol.cs` chứa hằng số và tên message. Đổi protocol phải mở PR riêng và báo cả nhóm trước.
 
 ## 2. Yêu cầu đề bài → người chịu trách nhiệm
 
@@ -28,7 +28,7 @@
 | Lưu lịch sử và kết quả trận                                                     | Phát                                                     |
 | Xem danh sách trận đang diễn ra, vào xem với vai trò khán giả                   | Tú                                                       |
 | Khán giả vào giữa trận nhận đủ trạng thái, cập nhật bàn cờ + thời gian realtime | Tú                                                       |
-| Phân biệt người chơi/khán giả; khán giả không được gửi nước đi                  | Tú (Server từ chối) + Tiến (`handleMove` kiểm tra quyền) |
+| Phân biệt người chơi/khán giả; khán giả không được gửi nước đi                  | Tú (Server từ chối) + Tiến (`HandleMove` kiểm tra quyền) |
 | Khán giả rời phòng không ảnh hưởng trận                                         | Tú                                                       |
 
 Yêu cầu chung của môn: log Server (Huy), timeout (Huy/Phát), validate dữ liệu và trả lỗi rõ ràng (ai sở hữu handler nào thì tự validate handler đó), GUI không treo và có trạng thái kết nối (Toàn).
@@ -54,13 +54,15 @@ GV kiểm tra repo cuối mỗi tuần, nên **tuần nào mỗi người cũng 
 
 | Tuần           | Mục tiêu                                                                                                                                                                           | Ghi chú phụ thuộc                                                                         |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 1 (20–26/10)   | Huy: `receive/send/process/log/start` chạy được. Toàn: kết nối + `sendMessage/received/eventMessage`. Phát: `hello` + `openDatabase`. Những người khác viết logic + test case nháp | **Huy, Toàn, Phát làm xong trước giữa tuần**, vì những phần khác cần lõi này để test thật |
-| 2 (27/10–2/11) | Minh: mời + tạo phòng. Tiến: `handleMove` + `hasWinner`. Tú: `snapshot` + `broadcastRooms`. Các panel Client tương ứng                                                             | Sau tuần 2 phải chơi được 1 ván hoàn chỉnh                                                |
+| 1 (20–26/10)   | Huy: `Start/RunAsync/HandleClientAsync/Send/Process/Log` chạy được. Toàn: kết nối + `SendMessage/ReceiveLoopAsync/EventMessage`. Phát: `Hello` + `OpenDatabase`. Những người khác viết logic + test case nháp | **Huy, Toàn, Phát làm xong trước giữa tuần**, vì những phần khác cần lõi này để test thật |
+| 2 (27/10–2/11) | Minh: mời + tạo phòng. Tiến: `HandleMove` + `HasWinner`. Tú: `Snapshot` + `BroadcastRooms`. Các panel Client tương ứng                                                             | Sau tuần 2 phải chơi được 1 ván hoàn chỉnh                                                |
 | 3 (3–9/11)     | Đồng hồ + hết giờ (Tiến), khán giả (Tú), reconnect + lịch sử (Phát), lời mời hết hạn (Minh)                                                                                        | Đủ toàn bộ chức năng bắt buộc                                                             |
 | 4 (10–16/11)   | Mọi người chạy test case của mình; Huy chạy stress/performance; sửa lỗi                                                                                                            | Ghi kết quả + bằng chứng vào `Extra/`                                                     |
 | 5 (17–23/11)   | Báo cáo DOCX, PPTX, video demo, README hoàn chỉnh; test LAN nhiều máy                                                                                                              | Demo phải có ít nhất 1 tình huống mất kết nối                                             |
 
-## 5. Quy trình Git
+## 5. Công cụ & quy trình Git
+
+Công cụ: **.NET 10 SDK** + Visual Studio 2026 (workload *.NET desktop development*), hoặc VS Code + C# Dev Kit. Mở `CaroOnline.slnx`, hoặc build bằng `dotnet build CaroOnline.slnx`.
 
 ```bash
 git clone https://github.com/ZenithKiyota/Game-Caro-truc-tuyen.git
@@ -84,7 +86,7 @@ git push -u origin feature/<nhánh-của-mình>
 - Commit bằng **tài khoản GitHub cá nhân**: `git config user.name` và `user.email` phải là của mình.
 - Commit message mô tả rõ thay đổi, **không** dùng `update`, `fix`, `final`.
 - Trước khi mở PR: `git pull origin main` (hoặc rebase), build lại, chạy test phần của mình.
-- Không commit `build/`, `out/`, `.vs/`, `CMakeSettings.json`, `*.sqlite`, log, token.
+- Không commit `bin/`, `obj/`, `.vs/`, `*.user`, `*.sqlite`, log, token.
 
 ## 6. Checklist yêu cầu chung trước khi nộp
 

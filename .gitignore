@@ -427,11 +427,6 @@ FodyWeavers.xsd
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
 
-# CaroOnline: build CMake, cấu hình máy cá nhân, dữ liệu chạy
-build/
-cmake-build-*/
-CMakeSettings.json
-CMakeUserPresets.json
+# CaroOnline: dữ liệu và log khi chạy Server
 *.sqlite
 server.log
-
