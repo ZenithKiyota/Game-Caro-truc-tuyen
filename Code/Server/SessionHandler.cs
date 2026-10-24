@@ -236,11 +236,62 @@ private void PauseIfNeeded(Room room)
 }
 
 
-    private bool CheckReconnectGrace(Room room, long now)
-    {
-        // TODO(Phát): người chơi offline >= Protocol.ReconnectGraceMs -> Finish() xử thua, trả true.
+    
+private bool CheckReconnectGrace(Room room, long now)
+{
+    // Không xử lý trận đã kết thúc.
+    if (!room.Active)
         return false;
+
+    _sessions.TryGetValue(room.X, out Session? xSession);
+    _sessions.TryGetValue(room.O, out Session? oSession);
+
+    // Kiểm tra người chơi X mất kết nối quá 90 giây.
+    bool xExpired =
+        xSession is not null &&
+        xSession.Connection is null &&
+        xSession.OfflineSince > 0 &&
+        now - xSession.OfflineSince >= Protocol.ReconnectGraceMs;
+
+    // Kiểm tra người chơi O mất kết nối quá 90 giây.
+    bool oExpired =
+        oSession is not null &&
+        oSession.Connection is null &&
+        oSession.OfflineSince > 0 &&
+        now - oSession.OfflineSince >= Protocol.ReconnectGraceMs;
+
+    if (!xExpired && !oExpired)
+        return false;
+
+    // Cả hai cùng hết hạn: xét người mất kết nối trước.
+    if (xExpired && oExpired)
+    {
+        if (xSession!.OfflineSince < oSession!.OfflineSince)
+        {
+            Finish(room, room.O, "X mất kết nối quá 90 giây");
+        }
+        else if (oSession.OfflineSince < xSession.OfflineSince)
+        {
+            Finish(room, room.X, "O mất kết nối quá 90 giây");
+        }
+        else
+        {
+            // Trường hợp cả hai mất kết nối đúng cùng thời điểm.
+            Finish(room, "", "Cả hai mất kết nối quá 90 giây");
+        }
     }
+    else if (xExpired)
+    {
+        Finish(room, room.O, "X mất kết nối quá 90 giây");
+    }
+    else
+    {
+        Finish(room, room.X, "O mất kết nối quá 90 giây");
+    }
+
+    return true;
+}
+
 
     private void RemoveExpiredSessions(long now)
     {
