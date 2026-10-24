@@ -184,11 +184,57 @@ private void Disconnected(ClientConnection connection)
 }
 
 
-    private void PauseIfNeeded(Room room)
+   
+private void PauseIfNeeded(Room room)
+{
+    // Trận đã kết thúc thì không xử lý tạm dừng.
+    if (!room.Active)
+        return;
+
+    long now = NowMs();
+
+    // Kiểm tra trạng thái kết nối của hai người chơi.
+    bool xOnline =
+        _sessions.TryGetValue(room.X, out Session? xSession) &&
+        xSession.Connection is not null;
+
+    bool oOnline =
+        _sessions.TryGetValue(room.O, out Session? oSession) &&
+        oSession.Connection is not null;
+
+    // Nếu thiếu một trong hai người chơi.
+    if (!xOnline || !oOnline)
     {
-        // TODO(Phát): thiếu người chơi online -> Paused, lưu PausedRemaining;
-        // đủ người -> tiếp tục với Deadline = now + PausedRemaining.
+        if (!room.Paused)
+        {
+            // Giữ lại thời gian của lượt hiện tại.
+            room.PausedRemaining =
+                Math.Max(0L, room.Deadline - now);
+
+            room.Paused = true;
+            room.LastBroadcastSecond = -1;
+
+            Log($"MATCH_PAUSED: phòng {room.Id}");
+        }
+
+        return;
     }
+
+    // Khi cả hai người chơi kết nối lại.
+    if (room.Paused)
+    {
+        // Khôi phục thời gian lượt còn lại.
+        room.Deadline =
+            now + Math.Max(0L, room.PausedRemaining);
+
+        room.Paused = false;
+        room.PausedRemaining = 0;
+        room.LastBroadcastSecond = -1;
+
+        Log($"MATCH_RESUMED: phòng {room.Id}");
+    }
+}
+
 
     private bool CheckReconnectGrace(Room room, long now)
     {
