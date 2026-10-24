@@ -293,8 +293,55 @@ private bool CheckReconnectGrace(Room room, long now)
 }
 
 
-    private void RemoveExpiredSessions(long now)
+   
+private void RemoveExpiredSessions(long now)
+{
+    var expiredNames = new List<string>();
+
+    // Tìm các phiên đăng nhập đã hết hạn.
+    foreach (var pair in _sessions)
     {
-        // TODO(Phát): xóa session offline quá hạn và không còn trong phòng.
+        string name = pair.Key;
+        Session session = pair.Value;
+
+        // Người chơi còn kết nối thì giữ nguyên.
+        if (session.Connection is not null)
+            continue;
+
+        // Chưa ghi nhận thời điểm mất kết nối.
+        if (session.OfflineSince <= 0)
+            continue;
+
+        // Chưa quá thời gian cho phép kết nối lại.
+        if (now - session.OfflineSince <
+            Protocol.ReconnectGraceMs)
+            continue;
+
+        // Không xóa phiên khi trận vẫn đang diễn ra.
+        // CheckReconnectGrace cần xử lý kết quả trước.
+        if (session.RoomId >= 0 &&
+            _rooms.TryGetValue(session.RoomId, out Room? room) &&
+            room.Active)
+        {
+            continue;
+        }
+
+        expiredNames.Add(name);
     }
+
+    // Xóa sau khi duyệt để không làm thay đổi
+    // Dictionary ngay trong vòng foreach.
+    foreach (string name in expiredNames)
+    {
+        _sessions.Remove(name);
+        Log($"SESSION_EXPIRED: {name}");
+    }
+
+    // Cập nhật danh sách người chơi khi có thay đổi.
+    if (expiredNames.Count > 0)
+    {
+        BroadcastUsers();
+    }
+}
+
 }
