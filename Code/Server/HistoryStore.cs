@@ -75,10 +75,64 @@ private bool OpenDatabase()
 }
 
 
-    private void SaveMatch(Room room)
+    
+private void SaveMatch(Room room)
+{
+    if (_database is null)
     {
-        // TODO(Phát): INSERT kết quả trận bằng tham số ($x, $o, ...), Log nếu lỗi.
+        Log($"SAVE MATCH ERROR: Database chưa được mở, phòng {room.Id}");
+        return;
     }
+
+    try
+    {
+        using var command = _database.CreateCommand();
+
+        command.CommandText = """
+            INSERT INTO matches (
+                room_id,
+                player_x,
+                player_o,
+                winner,
+                reason,
+                started_at,
+                ended_at,
+                moves_json
+            )
+            VALUES (
+                $roomId,
+                $playerX,
+                $playerO,
+                $winner,
+                $reason,
+                $startedAt,
+                $endedAt,
+                $movesJson
+            );
+            """;
+
+        command.Parameters.AddWithValue("$roomId", room.Id);
+        command.Parameters.AddWithValue("$playerX", room.X);
+        command.Parameters.AddWithValue("$playerO", room.O);
+        command.Parameters.AddWithValue("$winner", room.Winner);
+        command.Parameters.AddWithValue("$reason", room.Reason);
+        command.Parameters.AddWithValue(
+            "$startedAt", Timestamp(room.StartedAt));
+        command.Parameters.AddWithValue(
+            "$endedAt", Timestamp(room.EndedAt));
+        command.Parameters.AddWithValue(
+            "$movesJson", room.Moves.ToJsonString());
+
+        command.ExecuteNonQuery();
+
+        Log($"SAVE MATCH: phòng {room.Id} | thắng: {room.Winner}");
+    }
+    catch (Exception ex)
+    {
+        Log($"SAVE MATCH ERROR: phòng {room.Id} | {ex.Message}");
+    }
+}
+
 
     private void SendHistory(string user)
     {
