@@ -134,8 +134,64 @@ private void SaveMatch(Room room)
 }
 
 
-    private void SendHistory(string user)
+    
+private void SendHistory(string user)
+{
+    if (_database is null)
     {
-        // TODO(Phát): SELECT 50 trận gần nhất, gửi history_result{matches:[...]}.
+        Log("HISTORY ERROR: Database chưa được mở.");
+        Notice(user, "Không thể tải lịch sử: cơ sở dữ liệu chưa sẵn sàng.");
+        return;
     }
+
+    try
+    {
+        var matches = new JsonArray();
+
+        using (var command = _database.CreateCommand())
+        {
+            command.CommandText = """
+                SELECT
+                    room_id,
+                    player_x,
+                    player_o,
+                    winner,
+                    reason,
+                    ended_at
+                FROM matches
+                ORDER BY id DESC
+                LIMIT 50;
+                """;
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                matches.Add(new JsonObject
+                {
+                    ["room"] = reader.GetInt32(0),
+                    ["x"] = reader.GetString(1),
+                    ["o"] = reader.GetString(2),
+                    ["winner"] = reader.GetString(3),
+                    ["reason"] = reader.GetString(4),
+                    ["endedAt"] = reader.GetString(5)
+                });
+            }
+        }
+
+        SendTo(user, new JsonObject
+        {
+            ["type"] = Msg.HistoryResult,
+            ["matches"] = matches
+        });
+
+        Log($"HISTORY: đã gửi lịch sử cho {user}");
+    }
+    catch (Exception ex)
+    {
+        Log($"HISTORY ERROR: {ex.Message}");
+        Notice(user, "Không thể tải lịch sử trận đấu.");
+    }
+}
+
 }
