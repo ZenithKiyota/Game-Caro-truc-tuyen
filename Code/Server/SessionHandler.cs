@@ -128,11 +128,61 @@ private void Hello(ClientConnection connection, JsonObject msg)
 }
 
 
-    private void Disconnected(ClientConnection connection)
+    
+private void Disconnected(ClientConnection connection)
+{
+    Session? session = null;
+
+    // Tìm phiên đang sử dụng kết nối vừa bị ngắt.
+    foreach (var item in _sessions.Values)
     {
-        // TODO(Phát): gỡ connection khỏi session, ghi OfflineSince; khán giả -> rời phòng;
-        // người chơi trong trận -> PauseIfNeeded + BroadcastSnapshot; Log; BroadcastUsers/Rooms.
+        if (ReferenceEquals(item.Connection, connection))
+        {
+            session = item;
+            break;
+        }
     }
+
+    // Kết nối chưa đăng nhập hoặc đã được thay thế.
+    if (session is null)
+        return;
+
+    session.Connection = null;
+    session.OfflineSince = NowMs();
+
+    // Nếu người dùng đang ở trong phòng.
+    if (session.RoomId >= 0 &&
+        _rooms.TryGetValue(session.RoomId, out Room? room))
+    {
+        if (session.Spectator)
+        {
+            // Khán giả mất kết nối thì rời phòng.
+            room.Spectators.Remove(session.Name);
+            session.RoomId = -1;
+            session.Spectator = false;
+
+            if (room.Active)
+                BroadcastSnapshot(room);
+        }
+        else if (room.Active)
+        {
+            // Người chơi mất kết nối thì tạm dừng trận.
+            PauseIfNeeded(room);
+            BroadcastSnapshot(room);
+        }
+    }
+    else if (session.Spectator)
+    {
+        session.RoomId = -1;
+        session.Spectator = false;
+    }
+
+    Log($"DISCONNECTED: {session.Name}");
+
+    BroadcastUsers();
+    BroadcastRooms();
+}
+
 
     private void PauseIfNeeded(Room room)
     {
