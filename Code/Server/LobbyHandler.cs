@@ -6,15 +6,25 @@ namespace CaroOnline.Server;
 
 public sealed partial class CaroServer
 {
-    private bool UserAvailable(string name)
-    {
-        // TODO(Minh): online và chưa ở phòng nào.
-        return false;
-    }
+    // Rảnh = đang online và chưa ở phòng nào (chơi hoặc xem).
+    private bool UserAvailable(string name) =>
+        _sessions.TryGetValue(name, out Session? session)
+        && session.Connection is not null
+        && session.RoomId < 0;
 
     private void BroadcastUsers()
     {
-        // TODO(Minh): gửi users{users:[{name, busy}]} (sắp xếp theo tên) tới mọi client online.
+        var users = new JsonArray();
+        foreach (Session session in _sessions.Values
+                     .Where(s => s.Connection is not null)
+                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            users.Add(new JsonObject { ["name"] = session.Name, ["busy"] = session.RoomId >= 0 });
+        }
+
+        var msg = new JsonObject { ["type"] = Msg.Users, ["users"] = users };
+        foreach (Session session in _sessions.Values)
+            Send(session.Connection, msg);
     }
 
     private void HandleInvite(ClientConnection connection, string me, JsonObject msg)
