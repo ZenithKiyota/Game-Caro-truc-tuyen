@@ -11,6 +11,8 @@ Game Caro nhiều người chơi qua Server, hỗ trợ phòng đấu, khán gi�
 5. Nguyễn Tuấn Tú
 6. Nguyễn An Phát
 
+Bảng phân công, tiến độ và test case (online, bản chính): [Google Sheets – UDM_16 Phân công & Test case](https://docs.google.com/spreadsheets/d/10Lm81cFlh2na0Xu-8EvmEI-KIDpWyYuKYc1e3QJniRQ/edit). Bản sao Excel: [Extra/PhanCong_UDM16.xlsx](Extra/PhanCong_UDM16.xlsx).
+
 Phân công chi tiết: [PHAN_CONG.md](PHAN_CONG.md). Giao thức: [Code/Shared/PROTOCOL.md](Code/Shared/PROTOCOL.md).
 
 ## Cấu trúc
