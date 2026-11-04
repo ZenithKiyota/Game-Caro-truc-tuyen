@@ -75,7 +75,14 @@ public sealed partial class MainForm
 
     private void OnInviteResult(JsonObject msg)
     {
-        // TODO(Minh): WriteLog "X đã chấp nhận/từ chối lời mời".
+        string target = msg["target"] is JsonValue targetValue && targetValue.TryGetValue(out string? name)
+            ? name ?? ""
+            : "";
+        bool accepted = msg["accepted"] is JsonValue acceptedValue
+                        && acceptedValue.TryGetValue(out bool value) && value;
+        WriteLog(accepted
+            ? $"{target} đã chấp nhận lời mời. Trận đấu bắt đầu, bạn cầm X."
+            : $"{target} đã từ chối lời mời.");
     }
 
     private void InviteSelected()
