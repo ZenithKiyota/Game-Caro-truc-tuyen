@@ -52,8 +52,11 @@ public sealed partial class MainForm
         if (_gameLabel is not null)
         {
             if (_active)
+            {
+                var turnName = _currentTurn == "X" ? x : o;
                 _gameLabel.Text = $"Phòng #{roomId}: {x} (X) vs {o} (O) | Bạn: {role} | " +
-                                  (paused ? "Tạm dừng" : $"Lượt {(_currentTurn == "X" ? x : o)}"));
+                                  (paused ? "Tạm dừng" : $"Lượt {turnName}");
+            }
             else
             {
                 var winner = msg["winner"]?.GetValue<string>() ?? "";
