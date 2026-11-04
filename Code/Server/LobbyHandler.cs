@@ -96,9 +96,27 @@ public sealed partial class CaroServer
         CreateMatch(from, me);
     }
 
+    // Gọi từ ClockTick: bỏ lời mời quá hạn, hoặc khi một bên đã vào phòng khác hay mất kết nối.
     private void ExpireInvites(long now)
     {
-        // TODO(Minh): xóa lời mời hết hạn hoặc khi một bên đã bận/thoát; báo người mời.
+        for (int i = _invites.Count - 1; i >= 0; i--)
+        {
+            Invite invite = _invites[i];
+            bool expired = invite.ExpiresAt <= now;
+            if (!expired && UserAvailable(invite.From) && UserAvailable(invite.To)) continue;
+
+            _invites.RemoveAt(i);
+            if (expired)
+            {
+                Notice(invite.From, $"Lời mời tới {invite.To} đã hết hạn.");
+                Notice(invite.To, $"Lời mời từ {invite.From} đã hết hạn.");
+                Log($"INVITE_EXPIRED {invite.From} -> {invite.To}");
+            }
+            else
+            {
+                Notice(invite.From, $"Lời mời tới {invite.To} đã bị huỷ vì một bên đang bận hoặc đã thoát.");
+            }
+        }
     }
 
     // Người mời cầm X và đi trước. Mỗi phòng có trạng thái riêng trong _rooms nên nhiều trận chạy song song.
