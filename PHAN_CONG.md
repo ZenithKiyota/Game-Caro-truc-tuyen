@@ -2,6 +2,8 @@
 
 > Nguyên tắc: **mỗi người làm trọn một tính năng cả Server lẫn Client** và chỉ sửa file mình sở hữu, nên 6 người làm song song mà ít conflict.
 
+> **Bảng online (bản chính, cập nhật trạng thái và test case hằng tuần):** [Google Sheets – UDM_16 Phân công & Test case](https://docs.google.com/spreadsheets/d/10Lm81cFlh2na0Xu-8EvmEI-KIDpWyYuKYc1e3QJniRQ/edit) — gồm các trang Phân công, Yêu cầu → Người, Tiến độ, Test case (theo mẫu của GV), Tổng hợp. Bản sao Excel: `Extra/PhanCong_UDM16.xlsx`.
+
 ## 1. Bảng phân công
 
 | #   | Thành viên            | Vai trò / tính năng                                                                        | File sở hữu (Server)                                                      | File sở hữu (Client)                                              | Tài liệu, kiểm thử                                                                                                      |
