@@ -63,8 +63,37 @@ public sealed partial class CaroServer
 
     private void HandleInviteReply(ClientConnection connection, string me, JsonObject msg)
     {
-        // TODO(Minh): kiểm tra accept là bool, lời mời còn hạn; gửi invite_result cho người mời;
-        // chấp nhận -> CreateMatch(from, me).
+        if (msg["from"] is not JsonValue fromValue
+            || !fromValue.TryGetValue(out string? from)
+            || string.IsNullOrWhiteSpace(from))
+        {
+            Error(connection, "Thiếu tên người mời.");
+            return;
+        }
+        if (msg["accept"] is not JsonValue acceptValue || !acceptValue.TryGetValue(out bool accept))
+        {
+            Error(connection, "Phản hồi không hợp lệ: accept phải là true hoặc false.");
+            return;
+        }
+
+        long now = NowMs();
+        int index = _invites.FindIndex(i => i.From == from && i.To == me && i.ExpiresAt > now);
+        if (index < 0) { Error(connection, "Lời mời đã hết hạn hoặc không tồn tại."); return; }
+        _invites.RemoveAt(index);
+
+        SendTo(from, new JsonObject { ["type"] = Msg.InviteResult, ["target"] = me, ["accepted"] = accept });
+        Log($"INVITE_REPLY {me} -> {from} accepted={accept}");
+        if (!accept)
+        {
+            Notice(me, $"Đã từ chối lời mời từ {from}.");
+            return;
+        }
+        if (!UserAvailable(me) || !UserAvailable(from))
+        {
+            Error(connection, "Một người chơi đã bận hoặc đã thoát, không thể tạo phòng.");
+            return;
+        }
+        CreateMatch(from, me);
     }
 
     private void ExpireInvites(long now)
