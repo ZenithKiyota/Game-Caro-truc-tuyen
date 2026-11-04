@@ -48,7 +48,7 @@ Yêu cầu chung của môn: log Server (Huy), timeout (Huy/Phát), validate d�
 | Tú    | Danh sách phòng; khán giả vào giữa trận nhận snapshot; nhận cập nhật realtime; khán giả gửi `move` giả bằng script thì bị từ chối; rời phòng thì trận vẫn chạy; khán giả mất mạng |
 | Phát  | Tên không hợp lệ/trùng; reconnect trong 90 giây; quá 90 giây bị xử thua; token sai; lịch sử còn sau khi khởi động lại Server; xem lịch sử                                         |
 
-Đã chạy thực tế đến 04/11/2026: 9 test case (8 PASSED, 1 FAILED), chi tiết trên Google Sheets.
+Đến 04/11/2026 chưa có test case nào được thành viên chạy thực tế.
 
 Script test tự động đặt ở `Extra/tests/`, mỗi người một file `test_<tính năng>.py`.
 
