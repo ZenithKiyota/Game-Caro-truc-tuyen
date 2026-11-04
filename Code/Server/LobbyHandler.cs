@@ -29,8 +29,36 @@ public sealed partial class CaroServer
 
     private void HandleInvite(ClientConnection connection, string me, JsonObject msg)
     {
-        // TODO(Minh): kiểm tra target hợp lệ/rảnh, không tự mời, không mời trùng;
-        // lưu Invite (hết hạn sau Protocol.InviteTimeoutMs), gửi invite_received cho target, Notice cho me.
+        if (msg["target"] is not JsonValue targetValue
+            || !targetValue.TryGetValue(out string? target)
+            || string.IsNullOrWhiteSpace(target))
+        {
+            Error(connection, "Thiếu tên người được mời.");
+            return;
+        }
+        if (target == me) { Error(connection, "Không thể tự mời chính mình."); return; }
+        if (!_sessions.TryGetValue(target, out Session? targetSession) || targetSession.Connection is null)
+        {
+            Error(connection, $"{target} không online.");
+            return;
+        }
+        if (!UserAvailable(me)) { Error(connection, "Bạn đang ở trong phòng, không thể mời người khác."); return; }
+        if (!UserAvailable(target)) { Error(connection, $"{target} đang bận."); return; }
+        if (_invites.Any(i => i.From == me && i.To == target))
+        {
+            Error(connection, $"Đã mời {target}, hãy chờ phản hồi.");
+            return;
+        }
+        if (_invites.Any(i => i.From == target && i.To == me))
+        {
+            Error(connection, $"{target} đã mời bạn, hãy trả lời lời mời đó.");
+            return;
+        }
+
+        _invites.Add(new Invite(me, target, NowMs() + Protocol.InviteTimeoutMs));
+        SendTo(target, new JsonObject { ["type"] = Msg.InviteReceived, ["from"] = me });
+        Notice(me, $"Đã mời {target} (hiệu lực {Protocol.InviteTimeoutMs / 1000} giây).");
+        Log($"INVITE {me} -> {target}");
     }
 
     private void HandleInviteReply(ClientConnection connection, string me, JsonObject msg)
