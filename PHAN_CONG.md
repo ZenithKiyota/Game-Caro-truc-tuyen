@@ -35,18 +35,20 @@ Server là `partial class CaroServer`, Client là `partial class MainForm`: mỗ
 
 Yêu cầu chung của môn: log Server (Huy), timeout (Huy/Phát), validate dữ liệu và trả lỗi rõ ràng (ai sở hữu handler nào thì tự validate handler đó), GUI không treo và có trạng thái kết nối (Toàn).
 
-## 3. Test case mỗi người tự viết và chạy
+## 3. Kế hoạch test của từng người (chưa phải kết quả)
 
-Ghi theo mẫu sheet test (No, Name/Screen, Description, Input/Scenario, Expected Result, Test Result 1–3, Stage, Proof). Mỗi case cần log, ảnh hoặc video làm bằng chứng.
+Đây là **việc cần test**, không phải test đã chạy. Chỉ khi chạy thật và có kết quả mới thêm vào trang **Test case** của Google Sheets (đánh số TC tiếp theo), theo mẫu của GV: No, Name/Screen, Description, Input/Scenario, Expected Result, Test Result 1–3, Stage, Proof. Mỗi case cần log, ảnh hoặc video làm bằng chứng, lưu vào `Extra/results/`.
 
-| Người | Mã       | Nội dung chính                                                                                                                                                                    |
-| ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Huy   | TC_01–05 | Kết nối nhiều client; JSON sai; gói > 64 KiB; gói bị chia/gộp; Server không sập khi client ngắt đột ngột; **stress/performance ≥ 2 mức tải** (5/20/50 client)                     |
-| Toàn  | TC_06–09 | Đổi IP/Port; trạng thái đang kết nối/thành công/thất bại; Server tắt đột ngột thì Client không crash; Client tự kết nối lại                                                       |
-| Tiến  | TC_10–16 | Đánh sai lượt; ô đã có quân; ô ngoài bàn; thắng ngang/dọc/chéo; hòa; hết 30 giây                                                                                                  |
-| Minh  | TC_17–22 | Danh sách online cập nhật; mời → chấp nhận; mời → từ chối; mời người đang bận; lời mời hết hạn 60 giây; 2 phòng chạy đồng thời                                                    |
-| Tú    | TC_23–28 | Danh sách phòng; khán giả vào giữa trận nhận snapshot; nhận cập nhật realtime; khán giả gửi `move` giả bằng script thì bị từ chối; rời phòng thì trận vẫn chạy; khán giả mất mạng |
-| Phát  | TC_29–34 | Tên không hợp lệ/trùng; reconnect trong 90 giây; quá 90 giây bị xử thua; token sai; lịch sử còn sau khi khởi động lại Server; xem lịch sử                                         |
+| Người | Cần test                                                                                                                                                                          |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Huy   | Kết nối nhiều client; JSON sai; gói > 64 KiB; gói bị chia/gộp; Server không sập khi client ngắt đột ngột; **stress/performance ≥ 2 mức tải** (5/20/50 client)                     |
+| Toàn  | Đổi IP/Port; trạng thái đang kết nối/thành công/thất bại; Server tắt đột ngột thì Client không crash; Client tự kết nối lại                                                       |
+| Tiến  | Đánh sai lượt; ô đã có quân; ô ngoài bàn; thắng ngang/dọc/chéo; hòa; hết 30 giây                                                                                                  |
+| Minh  | Danh sách online cập nhật; mời → chấp nhận; mời → từ chối; mời người đang bận; lời mời hết hạn 60 giây; 2 phòng chạy đồng thời                                                    |
+| Tú    | Danh sách phòng; khán giả vào giữa trận nhận snapshot; nhận cập nhật realtime; khán giả gửi `move` giả bằng script thì bị từ chối; rời phòng thì trận vẫn chạy; khán giả mất mạng |
+| Phát  | Tên không hợp lệ/trùng; reconnect trong 90 giây; quá 90 giây bị xử thua; token sai; lịch sử còn sau khi khởi động lại Server; xem lịch sử                                         |
+
+Đã chạy thực tế đến 04/11/2026: 9 test case (8 PASSED, 1 FAILED), chi tiết trên Google Sheets.
 
 Script test tự động đặt ở `Extra/tests/`, mỗi người một file `test_<tính năng>.py`.
 
