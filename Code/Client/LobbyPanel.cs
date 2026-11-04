@@ -59,7 +59,18 @@ public sealed partial class MainForm
 
     private void OnInviteReceived(JsonObject msg)
     {
-        // TODO(Minh): hỏi Đồng ý/Từ chối, gửi invite_reply{from, accept}.
+        if (msg["from"] is not JsonValue fromValue
+            || !fromValue.TryGetValue(out string? from)
+            || string.IsNullOrEmpty(from))
+            return;
+
+        WriteLog($"Có lời mời thách đấu từ {from}.");
+        DialogResult answer = MessageBox.Show(this,
+            $"{from} mời bạn chơi Caro.\nLời mời có hiệu lực {Protocol.InviteTimeoutMs / 1000} giây. Đồng ý?",
+            "Lời mời thách đấu", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        bool accept = answer == DialogResult.Yes;
+        SendMessage(new JsonObject { ["type"] = Msg.InviteReply, ["from"] = from, ["accept"] = accept });
+        WriteLog(accept ? $"Đã đồng ý chơi với {from}." : $"Đã từ chối lời mời của {from}.");
     }
 
     private void OnInviteResult(JsonObject msg)
