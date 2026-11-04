@@ -44,9 +44,30 @@ public sealed partial class CaroServer
         // TODO(Minh): xóa lời mời hết hạn hoặc khi một bên đã bận/thoát; báo người mời.
     }
 
+    // Người mời cầm X và đi trước. Mỗi phòng có trạng thái riêng trong _rooms nên nhiều trận chạy song song.
     private void CreateMatch(string x, string o)
     {
-        // TODO(Minh): tạo Room mới (Id = _nextRoomId++), gán RoomId cho 2 session,
-        // Deadline = now + Protocol.TurnSeconds; Log MATCH_START; BroadcastSnapshot/Users/Rooms.
+        if (!UserAvailable(x) || !UserAvailable(o)) return;
+
+        long now = NowMs();
+        var room = new Room
+        {
+            Id = _nextRoomId++,
+            X = x,
+            O = o,
+            StartedAt = now,
+            Deadline = now + Protocol.TurnSeconds * 1000L,
+        };
+        _rooms.Add(room.Id, room);
+        foreach (string name in new[] { x, o })
+        {
+            _sessions[name].RoomId = room.Id;
+            _sessions[name].Spectator = false;
+        }
+
+        Log($"MATCH_START #{room.Id} X={x} O={o}");
+        BroadcastSnapshot(room);
+        BroadcastUsers();
+        BroadcastRooms();
     }
 }
