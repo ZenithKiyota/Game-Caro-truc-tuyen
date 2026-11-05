@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Remove="LobbyPanel.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Shared\CaroShared.csproj" />
   </ItemGroup>
 
