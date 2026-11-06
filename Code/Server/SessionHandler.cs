@@ -81,12 +81,9 @@ private void Hello(ClientConnection connection, JsonObject msg)
     }
     else
     {
-        // Token cũ không được dùng để tạo tài khoản mới.
-        if (!string.IsNullOrEmpty(token))
-        {
-            Error(connection, "Không tìm thấy phiên để kết nối lại.");
-            return;
-        }
+        // Nếu Server vừa khởi động lại, session cũ trong RAM đã mất.
+        // Cho phép đăng nhập mới dù Client còn gửi token cũ.
+        // Server sẽ cấp token mới bên dưới.
 
         session = new Session
         {
