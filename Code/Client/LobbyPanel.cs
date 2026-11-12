@@ -7,6 +7,7 @@ namespace CaroOnline.Client;
 public sealed partial class MainForm
 {
     private ListBox? _usersList;
+    private bool _invitePromptOpen; // đang hiện hộp thoại trả lời một lời mời
 
     private sealed record UserItem(string Name, bool Busy, bool IsMe)
     {
@@ -64,11 +65,28 @@ public sealed partial class MainForm
             || string.IsNullOrEmpty(from))
             return;
 
+        // Đang trả lời một lời mời khác: tự từ chối lời mời mới để không mở hộp thoại chồng lên nhau.
+        if (_invitePromptOpen)
+        {
+            SendMessage(new JsonObject { ["type"] = Msg.InviteReply, ["from"] = from, ["accept"] = false });
+            WriteLog($"Đã tự từ chối lời mời từ {from} vì đang trả lời một lời mời khác.");
+            return;
+        }
+
         WriteLog($"Có lời mời thách đấu từ {from}.");
-        DialogResult answer = MessageBox.Show(this,
-            $"{from} mời bạn chơi Caro.\nLời mời có hiệu lực {Protocol.InviteTimeoutMs / 1000} giây. Đồng ý?",
-            "Lời mời thách đấu", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-        bool accept = answer == DialogResult.Yes;
+        bool accept;
+        _invitePromptOpen = true;
+        try
+        {
+            DialogResult answer = MessageBox.Show(this,
+                $"{from} mời bạn chơi Caro.\nLời mời có hiệu lực {Protocol.InviteTimeoutMs / 1000} giây. Đồng ý?",
+                "Lời mời thách đấu", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            accept = answer == DialogResult.Yes;
+        }
+        finally
+        {
+            _invitePromptOpen = false;
+        }
         SendMessage(new JsonObject { ["type"] = Msg.InviteReply, ["from"] = from, ["accept"] = accept });
         WriteLog(accept ? $"Đã đồng ý chơi với {from}." : $"Đã từ chối lời mời của {from}.");
     }
