@@ -81,16 +81,20 @@ public sealed partial class CaroServer
         if (index < 0) { Error(connection, "Lời mời đã hết hạn hoặc không tồn tại."); return; }
         _invites.RemoveAt(index);
 
+        // Kiểm tra trước khi báo kết quả, để người mời không nhận "đã chấp nhận" mà không có trận.
+        if (accept && (!UserAvailable(me) || !UserAvailable(from)))
+        {
+            Error(connection, "Một người chơi đã bận hoặc đã thoát, không thể tạo phòng.");
+            Notice(from, $"{me} đã đồng ý nhưng không thể tạo phòng vì một bên đã bận hoặc đã thoát.");
+            Log($"INVITE_REPLY {me} -> {from} accepted=True nhưng không tạo được phòng");
+            return;
+        }
+
         SendTo(from, new JsonObject { ["type"] = Msg.InviteResult, ["target"] = me, ["accepted"] = accept });
         Log($"INVITE_REPLY {me} -> {from} accepted={accept}");
         if (!accept)
         {
             Notice(me, $"Đã từ chối lời mời từ {from}.");
-            return;
-        }
-        if (!UserAvailable(me) || !UserAvailable(from))
-        {
-            Error(connection, "Một người chơi đã bận hoặc đã thoát, không thể tạo phòng.");
             return;
         }
         CreateMatch(from, me);
