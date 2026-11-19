@@ -38,7 +38,6 @@ public sealed partial class MainForm : Form
     public MainForm()
     {
         BuildUi();
-        // TODO(Toàn): đã hoàn thiện bộ hẹn giờ thử kết nối lại mỗi 2 giây khi người dùng vẫn muốn kết nối.
         _reconnectTimer = new System.Windows.Forms.Timer { Interval = 2000 };
         _reconnectTimer.Tick += async (_, _) =>
         {
@@ -66,7 +65,6 @@ public sealed partial class MainForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         Controls.Add(root);
 
-        // TODO(Toàn): thanh kết nối IP/Port/tên, nút kết nối và trạng thái đã được dựng tại đây.
         var connectionBar = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = false, Padding = new Padding(0, 0, 0, 8) };
         connectionBar.Controls.Add(new Label { Text = "IP máy chủ:", AutoSize = true, Margin = new Padding(3, 8, 3, 3) });
         _hostInput = new TextBox { Width = 150, Text = "127.0.0.1" };
@@ -112,7 +110,6 @@ public sealed partial class MainForm : Form
 
     private void WriteLog(string message)
     {
-        // TODO(Toàn): ghi nhật ký có thời gian; nếu được gọi từ luồng mạng thì chuyển về luồng UI.
         if (_logText is null || _logText.IsDisposed) return;
         string line = $"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}";
         if (_logText.InvokeRequired)
@@ -133,7 +130,6 @@ public sealed partial class MainForm : Form
 
     private void StartOrStop()
     {
-        // TODO(Toàn): kiểm tra tên, nạp token đã lưu và bắt đầu/dừng kết nối theo lựa chọn người dùng.
         if (_wantConnection)
         {
             _wantConnection = false;
@@ -166,7 +162,6 @@ public sealed partial class MainForm : Form
 
     private async Task StartConnectionAsync()
     {
-        // TODO(Toàn): kết nối tới IP/Port nhập trên giao diện, gửi hello và khởi động vòng nhận bất đồng bộ.
         if (!_wantConnection || _connecting || _stopping) return;
         _connecting = true;
         RefreshConnectionUi();
@@ -220,7 +215,6 @@ public sealed partial class MainForm : Form
 
     private async Task ReceiveLoopAsync()
     {
-        // TODO(Toàn): gom buffer TCP, tách frame NDJSON theo newline, parse JSON rồi chuyển sự kiện về UI.
         NetworkStream stream = _stream ?? throw new IOException("Luồng mạng chưa sẵn sàng.");
         byte[] readBuffer = new byte[4096];
         var frame = new List<byte>();
@@ -263,7 +257,6 @@ public sealed partial class MainForm : Form
 
     private void RefreshConnectionUi(string? statusOverride = null)
     {
-        // TODO(Toàn): đồng bộ nhãn trạng thái, nút và khả năng sửa thông tin kết nối.
         if (InvokeRequired)
         {
             if (!IsHandleCreated || IsDisposed) return;
@@ -283,7 +276,6 @@ public sealed partial class MainForm : Form
 
     private void SendMessage(JsonObject msg)
     {
-        // TODO(Toàn): gửi JSON UTF-8 dạng NDJSON, kiểm tra kết nối và giới hạn kích thước gói.
         NetworkStream? stream = _stream;
         if (stream is null || _client?.Connected != true)
         {
@@ -308,7 +300,6 @@ public sealed partial class MainForm : Form
 
     private void EventMessage(JsonObject msg)
     {
-        // TODO(Toàn): phân phối message Server tới đúng handler của từng thành viên/panel.
         string? type = msg["type"]?.GetValue<string>();
         switch (type)
         {
@@ -333,7 +324,6 @@ public sealed partial class MainForm : Form
 
     private void OnWelcome(JsonObject msg)
     {
-        // TODO(Toàn): xác nhận đăng nhập, lưu token reconnect và tải lại các danh sách ban đầu.
         string receivedToken = msg["token"]?.GetValue<string>() ?? "";
         if (receivedToken.Length == 0)
         {
@@ -351,7 +341,6 @@ public sealed partial class MainForm : Form
 
     private void RefreshLists()
     {
-        // TODO(Toàn): sau đăng nhập yêu cầu danh sách người chơi, phòng và lịch sử.
         SendMessage(new JsonObject { ["type"] = Msg.ListUsers });
         SendMessage(new JsonObject { ["type"] = Msg.ListRooms });
         SendMessage(new JsonObject { ["type"] = Msg.History });
