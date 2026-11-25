@@ -1,0 +1,11 @@
+﻿Host: 127.0.0.1:45454
+Clients: 100
+list_rooms requests: 500
+Average latency (ms): 0.53
+P95 latency (ms): 0.66
+Throughput (requests/s): 1889.50
+Average CaroServer CPU (% of total machine): 6.93
+Average CaroServer RAM (MB): 57.89
+Errors: 0
+CPU logical processors: 12
+CSV: perf_100client_L100-1.csv
