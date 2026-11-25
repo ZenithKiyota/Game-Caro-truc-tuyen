@@ -1,10 +1,12 @@
 using System.Net;
+using System.Text;
 using CaroOnline.Server;
 using CaroOnline.Shared;
 
 // Cú pháp: CaroServer [--address|-a 0.0.0.0] [--port|-p 45454]
 string address = "0.0.0.0";
 int port = Protocol.DefaultPort;
+Console.OutputEncoding = Encoding.UTF8;
 for (int i = 0; i < args.Length; i++)
 {
     string value = i + 1 < args.Length ? args[i + 1] : "";
