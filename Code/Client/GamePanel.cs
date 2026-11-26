@@ -37,8 +37,10 @@ public sealed partial class MainForm
         var o = msg["o"]?.GetValue<string>() ?? "O";
         _roomId = roomId;
         _active = msg["active"]?.GetValue<bool>() ?? false;
-        _spectator = msg["spectators"] is JsonArray spectators &&
-                     spectators.Any(item => item?.GetValue<string>() == _myName);
+        // Server gửi "spectators" là SỐ người xem (PROTOCOL.md), không phải danh sách tên,
+        // nên ai không phải X hoặc O trong phòng này thì là khán giả.
+        _spectator = _myName != x && _myName != o;
+        var spectatorCount = TryGetInt(msg, "spectators", out var count) ? count : 0;
         _currentTurn = msg["turn"]?.GetValue<string>() ?? "";
 
         var board = boardJson.Select(item => item?.GetValue<string>() ?? "").ToArray();
@@ -54,7 +56,7 @@ public sealed partial class MainForm
             if (_active)
             {
                 var turnName = _currentTurn == "X" ? x : o;
-                _gameLabel.Text = $"Phòng #{roomId}: {x} (X) vs {o} (O) | Bạn: {role} | " +
+                _gameLabel.Text = $"Phòng #{roomId}: {x} (X) vs {o} (O) | Bạn: {role} | Xem: {spectatorCount} | " +
                                   (paused ? "Tạm dừng" : $"Lượt {turnName}");
             }
             else
