@@ -8,6 +8,8 @@
 // nên các handler của từng người không cần tự lock.
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using CaroOnline.Shared;
 using Microsoft.Data.Sqlite;
@@ -75,56 +77,176 @@ public sealed partial class CaroServer : IDisposable
 
     private void Log(string message)
     {
-        // TODO(Huy): ghi "thời gian | sự kiện" ra Console và file server.log
-        // (Environment.SpecialFolder.ApplicationData/CaroServer). Không ghi token/dữ liệu bí mật.
+        Console.WriteLine($"{DateTimeOffset.Now:O} | {message}");
     }
 
     public bool Start(IPAddress address, int port)
     {
-        // TODO(Huy): OpenDatabase() (Phát), tạo TcpListener và Start(), Log,
-        // _clock = new Timer(_ => ClockTick(), null, 250, 250).
-        return false;
+        if (port is < 1 or > 65535) return false;
+        try
+        {
+            if (!OpenDatabase()) return false;
+            _listener = new TcpListener(address, port);
+            _listener.Start();
+            _clock = new Timer(_ => ClockTick(), null, 250, 250);
+            Log($"SERVER_START address={address} port={port}");
+            return true;
+        }
+        catch (Exception error) when (error is SocketException or InvalidOperationException)
+        {
+            Log($"SERVER_START_FAILED error={error.Message}");
+            _listener?.Stop();
+            _listener = null;
+            return false;
+        }
     }
 
     public async Task RunAsync(CancellationToken cancel)
     {
-        // TODO(Huy): vòng AcceptTcpClientAsync; mỗi client -> _ = HandleClientAsync(...).
-        await Task.CompletedTask;
+        if (_listener is null) return;
+        try
+        {
+            while (!cancel.IsCancellationRequested)
+            {
+                var client = await _listener.AcceptTcpClientAsync(cancel);
+                client.NoDelay = true;
+                var connection = new ClientConnection
+                {
+                    Client = client,
+                    Stream = client.GetStream()
+                };
+                Log($"CLIENT_CONNECT remote={connection.Remote}");
+                _ = HandleClientAsync(connection, cancel);
+            }
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+        }
+        catch (ObjectDisposedException) when (cancel.IsCancellationRequested)
+        {
+        }
     }
 
     private async Task HandleClientAsync(ClientConnection connection, CancellationToken cancel)
     {
-        // TODO(Huy): đọc stream, gom buffer, tách theo '\n', chặn gói > Protocol.MaxFrameBytes,
-        // JSON sai -> Error("JSON không hợp lệ."), JSON đúng -> lock(_gate) Process().
-        // Khi kết thúc/ngắt kết nối: lock(_gate) Disconnected(connection) (Phát), đóng socket.
-        await Task.CompletedTask;
+        var buffer = new List<byte>(Protocol.MaxFrameBytes);
+        var readBuffer = new byte[4096];
+        try
+        {
+            while (!cancel.IsCancellationRequested)
+            {
+                var count = await connection.Stream.ReadAsync(readBuffer, cancel);
+                if (count == 0) break;
+
+                for (var index = 0; index < count; index++)
+                {
+                    var value = readBuffer[index];
+                    if (value == (byte)'\n')
+                    {
+                        if (buffer.Count > 0 && buffer[^1] == (byte)'\r') buffer.RemoveAt(buffer.Count - 1);
+                        if (buffer.Count > Protocol.MaxFrameBytes)
+                        {
+                            Error(connection, "Gói tin vượt quá giới hạn 64 KiB.");
+                            return;
+                        }
+
+                        var line = Encoding.UTF8.GetString(buffer.ToArray());
+                        buffer.Clear();
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        try
+                        {
+                            if (JsonNode.Parse(line) is not JsonObject message)
+                            {
+                                Error(connection, "JSON không hợp lệ.");
+                                continue;
+                            }
+
+                            lock (_gate) Process(connection, message);
+                        }
+                        catch (JsonException)
+                        {
+                            Error(connection, "JSON không hợp lệ.");
+                        }
+                    }
+                    else
+                    {
+                        buffer.Add(value);
+                        if (buffer.Count > Protocol.MaxFrameBytes)
+                        {
+                            Error(connection, "Gói tin vượt quá giới hạn 64 KiB.");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (SocketException)
+        {
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+        }
+        finally
+        {
+            lock (_gate) Disconnected(connection);
+            connection.Client.Close();
+        }
     }
 
     private string? UserOf(ClientConnection connection)
     {
-        // TODO(Huy): tên người dùng đang gắn với connection, null nếu chưa đăng nhập.
-        return null;
+        return _sessions.Values.FirstOrDefault(session => ReferenceEquals(session.Connection, connection))?.Name;
     }
 
     private void Process(ClientConnection connection, JsonObject msg)
     {
-        // TODO(Huy): định tuyến theo msg["type"]:
-        //   hello          -> Hello()               (Phát)
-        //   (chưa đăng nhập -> Error "Cần đăng nhập trước.")
-        //   list_users     -> BroadcastUsers()      (Minh)
-        //   invite         -> HandleInvite()        (Minh)
-        //   invite_reply   -> HandleInviteReply()   (Minh)
-        //   move           -> HandleMove()          (Tiến)
-        //   list_rooms     -> BroadcastRooms(conn)  (Tú)
-        //   spectate       -> HandleSpectate()      (Tú)
-        //   leave_spectate -> HandleLeaveSpectate() (Tú)
-        //   history        -> SendHistory()         (Phát)
-        //   khác           -> Error "Loại yêu cầu không được hỗ trợ."
+        var type = msg["type"]?.GetValue<string>();
+        if (type == Msg.Hello)
+        {
+            Hello(connection, msg);
+            return;
+        }
+
+        var me = UserOf(connection);
+        if (me is null)
+        {
+            Error(connection, "Cần đăng nhập trước.");
+            return;
+        }
+
+        switch (type)
+        {
+            case Msg.ListUsers: BroadcastUsers(); break;
+            case Msg.Invite: HandleInvite(connection, me, msg); break;
+            case Msg.InviteReply: HandleInviteReply(connection, me, msg); break;
+            case Msg.Move: HandleMove(connection, me, msg); break;
+            case Msg.ListRooms: BroadcastRooms(connection); break;
+            case Msg.Spectate: HandleSpectate(connection, me, msg); break;
+            case Msg.LeaveSpectate: HandleLeaveSpectate(connection, me); break;
+            case Msg.History: SendHistory(me); break;
+            default: Error(connection, "Loại yêu cầu không được hỗ trợ."); break;
+        }
     }
 
     private void Send(ClientConnection? connection, JsonObject msg)
     {
-        // TODO(Huy): bỏ qua nếu null/mất kết nối; ghi JSON compact (UTF-8) + '\n'; lỗi ghi -> đóng kết nối.
+        if (connection is null || !connection.Connected) return;
+        try
+        {
+            var payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg) + "\n");
+            lock (connection) connection.Stream.Write(payload, 0, payload.Length);
+        }
+        catch (IOException)
+        {
+            connection.Client.Close();
+        }
+        catch (SocketException)
+        {
+            connection.Client.Close();
+        }
     }
 
     private void SendTo(string user, JsonObject msg)
@@ -140,16 +262,35 @@ public sealed partial class CaroServer : IDisposable
 
     private void ClockTick()
     {
-        // TODO(Huy): lock(_gate), mỗi 250 ms:
-        //   ExpireInvites(now)                          (Minh)
-        //   với từng phòng: xóa phòng đã kết thúc > 5 phút,
-        //     CheckReconnectGrace(room, now)            (Phát)
-        //     CheckTurnTimeout(room, now)               (Tiến) — gồm broadcast đồng hồ mỗi giây
-        //   RemoveExpiredSessions(now)                  (Phát)
+        lock (_gate)
+        {
+            var now = NowMs();
+            ExpireInvites(now);
+            foreach (var room in _rooms.Values.ToArray())
+            {
+                CheckReconnectGrace(room, now);
+                CheckTurnTimeout(room, now);
+                if (!room.Active && room.EndedAt > 0 && now - room.EndedAt > 5 * 60_000)
+                    _rooms.Remove(room.Id);
+            }
+            RemoveExpiredSessions(now);
+        }
     }
 
     public void Dispose()
     {
-        // TODO(Huy): dừng clock, listener; đóng mọi client và _database.
+        _clock?.Dispose();
+        _clock = null;
+        _listener?.Stop();
+        _listener = null;
+        lock (_gate)
+        {
+            foreach (var session in _sessions.Values)
+                session.Connection?.Client.Close();
+            _sessions.Clear();
+            _rooms.Clear();
+        }
+        _database?.Dispose();
+        _database = null;
     }
 }

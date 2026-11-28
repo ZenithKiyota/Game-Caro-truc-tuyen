@@ -42,3 +42,23 @@ Server quyết định toàn bộ lượt đi, thời gian, kết quả và quy�
 - Người chơi rớt mạng: ván **tạm dừng**, giữ thời gian còn lại của lượt; reconnect bằng cùng `token` trong **90 giây** thì chơi tiếp. Quá 90 giây: người mất kết nối bị xử thua.
 - Lời mời hết hạn sau 60 giây. Một người chỉ ở một phòng (chơi hoặc xem) tại một thời điểm.
 - Khán giả chỉ nhận `snapshot`; mọi `move` từ khán giả bị từ chối. Khán giả rời phòng không ảnh hưởng trận.
+
+## Kết quả kiểm thử luật chơi
+
+Đã chạy tự động ngày **28/11/2026** bằng [test_game_rules_tc29.py](../Extra/tests/test_game_rules_tc29.py), kết nối TCP tới Server trên cổng `45454`. Kết quả: **7/7 test case PASS**.
+
+| Mã test | Nội dung | Kết quả |
+|---|---|---|
+| TC_29 | Người chơi đánh sai lượt | PASS |
+| TC_30 | Đánh vào ô đã có quân | PASS |
+| TC_31 | Đánh vào ô ngoài bàn `15×15` | PASS |
+| TC_32 | Thắng theo hàng ngang, hàng dọc và đường chéo | PASS |
+| TC_33 | Bàn cờ đầy và kết thúc hòa | PASS |
+| TC_34 | Hết 30 giây: người đến lượt bị xử thua | PASS |
+| TC_35 | Thắng sau chuỗi nước đi hợp lệ | PASS |
+
+Lệnh chạy kiểm thử:
+
+```bash
+python3 Extra/tests/test_game_rules_tc29.py --host 127.0.0.1 --port 45454
+```

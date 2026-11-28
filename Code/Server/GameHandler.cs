@@ -98,7 +98,7 @@ public sealed partial class CaroServer
 
         room.Turn = color == 1 ? 2 : 1;
         room.Deadline = now + Protocol.TurnSeconds * 1000L;
-        room.LastBroadcastSecond = -1;
+        room.LastBroadcastSecond = Protocol.TurnSeconds;
         BroadcastSnapshot(room);
     }
 
