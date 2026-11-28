@@ -1,4 +1,3 @@
-// Phụ trách: Hứa Hồng Tiến — hiển thị trận đấu, lượt đi, đồng hồ đếm ngược, kết quả.
 using System.Text.Json.Nodes;
 using CaroOnline.Shared;
 
@@ -37,8 +36,6 @@ public sealed partial class MainForm
         var o = msg["o"]?.GetValue<string>() ?? "O";
         _roomId = roomId;
         _active = msg["active"]?.GetValue<bool>() ?? false;
-        // Server gửi "spectators" là SỐ người xem (PROTOCOL.md), không phải danh sách tên,
-        // nên ai không phải X hoặc O trong phòng này thì là khán giả.
         _spectator = _myName != x && _myName != o;
         var spectatorCount = TryGetInt(msg, "spectators", out var count) ? count : 0;
         _currentTurn = msg["turn"]?.GetValue<string>() ?? "";

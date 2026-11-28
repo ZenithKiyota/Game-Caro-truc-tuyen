@@ -1,8 +1,3 @@
-// Phụ trách: Trần Đức Toàn — khung giao diện, kết nối TCP, framing, auto-reconnect, nhật ký Client.
-// MainForm là partial class, chia theo panel/người phụ trách (xem PHAN_CONG.md).
-// Giao diện được dựng bằng code để các thành viên tránh conflict file Designer.
-// Dữ liệu mạng nhận trên luồng nền; phải BeginInvoke về luồng UI trước khi gọi EventMessage().
-// Control trong panel khác có thể null khi panel chưa hoàn thiện, nên các handler cần kiểm tra trước khi dùng.
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -15,7 +10,6 @@ namespace CaroOnline.Client;
 
 public sealed partial class MainForm : Form
 {
-    // ---------- Toàn: kết nối, framing, reconnect và trạng thái Client ----------
     private TcpClient? _client;
     private NetworkStream? _stream;
     private readonly object _sendLock = new();
@@ -91,15 +85,15 @@ public sealed partial class MainForm : Form
         var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
         left.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
         left.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-        left.Controls.Add(BuildLobbyPanel(), 0, 0); // Minh: sảnh, danh sách online và lời mời.
-        left.Controls.Add(BuildRoomsPanel(), 0, 1); // Tú: danh sách phòng và thao tác khán giả.
+        left.Controls.Add(BuildLobbyPanel(), 0, 0);
+        left.Controls.Add(BuildRoomsPanel(), 0, 1);
         body.Controls.Add(left, 0, 0);
-        body.Controls.Add(BuildGamePanel(), 1, 0); // Tiến: bàn cờ và trạng thái trận.
+        body.Controls.Add(BuildGamePanel(), 1, 0);
 
         var right = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2 };
         right.RowStyles.Add(new RowStyle(SizeType.Percent, 60));
         right.RowStyles.Add(new RowStyle(SizeType.Percent, 40));
-        right.Controls.Add(BuildHistoryPanel(), 0, 0); // Phát: lịch sử trận.
+        right.Controls.Add(BuildHistoryPanel(), 0, 0);
         var logGroup = new GroupBox { Text = "Nhật ký Client", Dock = DockStyle.Fill, Padding = new Padding(8) };
         _logText = new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical };
         logGroup.Controls.Add(_logText);
@@ -303,20 +297,15 @@ public sealed partial class MainForm : Form
         string? type = msg["type"]?.GetValue<string>();
         switch (type)
         {
-            // Toàn xử lý kết nối, đăng nhập và thông báo chung.
             case Msg.Welcome: OnWelcome(msg); break;
             case Msg.Error: WriteLog($"Lỗi từ Server: {msg["message"]?.GetValue<string>() ?? "Không có nội dung"}"); break;
             case Msg.Notice: WriteLog(msg["message"]?.GetValue<string>() ?? "Thông báo từ Server."); break;
-            // Minh phụ trách danh sách người chơi và lời mời.
             case Msg.Users: OnUsers(msg); break;
             case Msg.InviteReceived: OnInviteReceived(msg); break;
             case Msg.InviteResult: OnInviteResult(msg); break;
-            // Tiến phụ trách snapshot, bàn cờ và trạng thái trận.
             case Msg.Snapshot: ApplySnapshot(msg); break;
-            // Tú phụ trách danh sách phòng và trạng thái khán giả.
             case Msg.Rooms: OnRooms(msg); break;
             case Msg.LeftRoom: OnLeftRoom(); break;
-            // Phát phụ trách lịch sử.
             case Msg.HistoryResult: OnHistory(msg); break;
             default: WriteLog($"Server gửi loại thông điệp không nhận diện: {type ?? "(thiếu type)"}."); break;
         }

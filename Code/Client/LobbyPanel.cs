@@ -1,4 +1,3 @@
-// Phụ trách: Hồ Thanh Anh Minh — danh sách người chơi online, gửi/chấp nhận/từ chối lời mời.
 using System.Text.Json.Nodes;
 using CaroOnline.Shared;
 
@@ -7,7 +6,7 @@ namespace CaroOnline.Client;
 public sealed partial class MainForm
 {
     private ListBox? _usersList;
-    private bool _invitePromptOpen; // đang hiện hộp thoại trả lời một lời mời
+    private bool _invitePromptOpen;
 
     private sealed record UserItem(string Name, bool Busy, bool IsMe)
     {
@@ -65,7 +64,6 @@ public sealed partial class MainForm
             || string.IsNullOrEmpty(from))
             return;
 
-        // Đang trả lời một lời mời khác: tự từ chối lời mời mới để không mở hộp thoại chồng lên nhau.
         if (_invitePromptOpen)
         {
             SendMessage(new JsonObject { ["type"] = Msg.InviteReply, ["from"] = from, ["accept"] = false });

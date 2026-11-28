@@ -1,5 +1,3 @@
-
-// Giao diện lịch sử và kết quả trận đấu.
 using System.Text.Json.Nodes;
 using CaroOnline.Shared;
 

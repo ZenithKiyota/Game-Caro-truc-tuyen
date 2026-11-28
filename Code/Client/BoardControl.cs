@@ -1,11 +1,10 @@
-// Phụ trách: Hứa Hồng Tiến — vẽ bàn cờ 15x15, đánh dấu nước cuối, chuyển click chuột thành (row, col).
 using CaroOnline.Shared;
 
 namespace CaroOnline.Client;
 
 public sealed class BoardControl : Control
 {
-    private string[] _board = Array.Empty<string>(); // 15 chuỗi gồm 'X', 'O', '.'
+    private string[] _board = Array.Empty<string>();
     private int _lastRow = -1, _lastCol = -1;
 
     public event Action<int, int>? CellClicked;
